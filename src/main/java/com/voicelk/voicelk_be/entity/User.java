@@ -1,23 +1,30 @@
 package com.voicelk.voicelk_be.entity;
 
-import jakarta.persistence.*;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
-@Table(name = "user")
+@Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User {
 
     @Id
-    @Column(name = "user_id", nullable = false, updatable = false, unique = true, length = 50)
+    @Column(name = "user_id", nullable = false, updatable = false, unique = true)
     private String userId;
 
     @Column(name = "role", nullable = false)
