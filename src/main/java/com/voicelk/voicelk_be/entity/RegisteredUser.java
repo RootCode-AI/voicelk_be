@@ -29,11 +29,11 @@ public class RegisteredUser extends User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "account_status", columnDefinition = "ACTIVE")
+    @Column(name = "account_status", nullable = false, columnDefinition = "varchar(20) default 'ACTIVE'")
     private String accountStatus;
 
-    @Column(name = "failed_login_count")
-    private Integer failedLoginCount = 0;
+    @Column(name = "failed_login_count", nullable = false, columnDefinition = "integer default 0")
+    private int failedLoginCount = 0;
 
     @Column(name = "lock_timestamp")
     private LocalDateTime lockTimestamp;

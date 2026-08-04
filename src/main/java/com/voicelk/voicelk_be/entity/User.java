@@ -24,7 +24,7 @@ import lombok.ToString;
 public class User {
 
     @Id
-    @Column(name = "user_id", nullable = false, updatable = false, unique = true, length = 50)
+    @Column(name = "user_id", nullable = false, updatable = false, unique = true)
     private String userId;
 
     @Column(name = "role", nullable = false)
