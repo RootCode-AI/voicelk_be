@@ -76,6 +76,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         // .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/hello").permitAll()
+                        .requestMatchers("/api/ask").permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated());
 
