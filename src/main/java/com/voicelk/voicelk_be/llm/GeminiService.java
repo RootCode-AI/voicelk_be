@@ -33,26 +33,15 @@ public class GeminiService {
         this.restClient = RestClient.builder().build();
     }
 
-    /**
-     * Sends a prompt to Gemini Flash and returns the generated text response.
-     *
-     * @param prompt the input text to send to Gemini
-     * @return the generated response text
-     */
     public String generateAnswer(String prompt) {
         String url = apiUrl + "/" + model + ":generateContent?key=" + apiKey;
 
-        // Build request body matching Gemini API format
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(
                         Map.of("parts", List.of(
-                                Map.of("text", prompt)
-                        ))
-                ),
+                                Map.of("text", prompt)))),
                 "generationConfig", Map.of(
-                        "maxOutputTokens", maxOutputTokens
-                )
-        );
+                        "maxOutputTokens", maxOutputTokens));
 
         try {
             Map response = restClient.post()
@@ -70,29 +59,17 @@ public class GeminiService {
         }
     }
 
-    /**
-     * Sends a prompt with a system instruction for context-aware generation.
-     *
-     * @param systemInstruction the system-level instruction (e.g., "You are a Sinhala language tutor")
-     * @param userPrompt        the user's query text
-     * @return the generated response text
-     */
     public String generateAnswer(String systemInstruction, String userPrompt) {
         String url = apiUrl + "/" + model + ":generateContent?key=" + apiKey;
 
         Map<String, Object> requestBody = Map.of(
                 "system_instruction", Map.of(
-                        "parts", List.of(Map.of("text", systemInstruction))
-                ),
+                        "parts", List.of(Map.of("text", systemInstruction))),
                 "contents", List.of(
                         Map.of("parts", List.of(
-                                Map.of("text", userPrompt)
-                        ))
-                ),
+                                Map.of("text", userPrompt)))),
                 "generationConfig", Map.of(
-                        "maxOutputTokens", maxOutputTokens
-                )
-        );
+                        "maxOutputTokens", maxOutputTokens));
 
         try {
             Map response = restClient.post()
@@ -110,10 +87,6 @@ public class GeminiService {
         }
     }
 
-    /**
-     * Extracts the text content from the Gemini API response.
-     * Response structure: { candidates: [{ content: { parts: [{ text: "..." }] } }] }
-     */
     @SuppressWarnings("unchecked")
     private String extractTextFromResponse(Map response) {
         if (response == null) {

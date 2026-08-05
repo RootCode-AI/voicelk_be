@@ -35,7 +35,6 @@ public class Answer {
     @Column(name = "source")
     private String source;
 
-    // One-to-One: One answer belongs to one Query (owning side)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "query_id", nullable = false, unique = true)
     private Query query;

@@ -25,27 +25,18 @@ public class QueryAnswerController {
     @Autowired
     private QueryAnswerService queryAnswerService;
 
-    /**
-     * Submit a query — saves to DB, generates answer via Gemini, saves answer, returns both.
-     */
     @PostMapping
     public ResponseEntity<QueryResponse> submitQuery(@RequestBody QueryRequest queryRequest) {
         QueryResponse response = queryAnswerService.submitQuery(queryRequest);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    /**
-     * Get a specific query with its answer.
-     */
     @GetMapping("/{queryId}")
     public ResponseEntity<QueryResponse> getQueryWithAnswer(@PathVariable String queryId) {
         QueryResponse response = queryAnswerService.getQueryWithAnswer(queryId);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get all queries with answers for a user (most recent first).
-     */
     @GetMapping("/history/{userId}")
     public ResponseEntity<List<QueryResponse>> getQueryHistory(@PathVariable String userId) {
         List<QueryResponse> history = queryAnswerService.getQueryHistoryByUserId(userId);

@@ -18,8 +18,6 @@ public class QueryResponse {
     private String syllabusTopic;
     private LocalDateTime timestamp;
     private String userId;
-
-    // Answer details
     private String answerId;
     private String responseText;
     private String source;

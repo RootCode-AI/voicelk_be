@@ -22,7 +22,7 @@ import lombok.ToString;
 @Entity
 @Getter
 @Setter
-@ToString(exclude = {"user", "answer"})
+@ToString(exclude = { "user", "answer" })
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "queries")
@@ -41,12 +41,10 @@ public class Query {
     @Column(name = "syllabus_topic")
     private String syllabusTopic;
 
-    // Many-to-One: Many queries can be submitted by one User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // One-to-One: One query generates one Answer
     @OneToOne(mappedBy = "query", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Answer answer;
 
