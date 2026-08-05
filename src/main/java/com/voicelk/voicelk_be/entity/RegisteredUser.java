@@ -26,7 +26,7 @@ public class RegisteredUser extends User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "account_status", nullable = false, columnDefinition = "varchar(20) default 'ACTIVE'")
@@ -37,5 +37,14 @@ public class RegisteredUser extends User {
 
     @Column(name = "lock_timestamp")
     private LocalDateTime lockTimestamp;
+
+    @Column(name = "firebase_uid", unique = true)
+    private String firebaseUid;
+
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
+    @Column(name = "auth_provider", columnDefinition = "varchar(20) default 'LOCAL'")
+    private String authProvider;
 
 }

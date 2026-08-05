@@ -73,7 +73,7 @@ public class WebSecurityConfig {
                         // Public endpoints
                         // .requestMatchers("/api/reg/**").permitAll()
                         .requestMatchers("/api/guest/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/***").permitAll()
                         // .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/hello").permitAll()
                         .requestMatchers("/api/ask").permitAll()
