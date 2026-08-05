@@ -17,13 +17,6 @@ public class FirebaseTokenVerifier {
     @Autowired
     private FirebaseAuth firebaseAuth;
 
-    /**
-     * Verifies a Firebase ID token and returns the decoded token.
-     *
-     * @param idToken the Firebase ID token from the frontend
-     * @return FirebaseToken containing uid, email, name, picture
-     * @throws FirebaseAuthException if the token is invalid or expired
-     */
     public FirebaseToken verifyToken(String idToken) throws FirebaseAuthException {
         FirebaseToken decodedToken = firebaseAuth.verifyIdToken(idToken);
         LOGGER.info("Firebase token verified for user: {}", decodedToken.getEmail());

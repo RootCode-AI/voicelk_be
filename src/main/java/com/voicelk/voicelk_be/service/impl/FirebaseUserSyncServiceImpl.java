@@ -30,7 +30,6 @@ public class FirebaseUserSyncServiceImpl implements FirebaseUserSyncService {
         Optional<RegisteredUser> existingUser = registeredUserRepository.findByEmail(email);
 
         if (existingUser.isPresent()) {
-            // Update existing user with latest Firebase info
             RegisteredUser user = existingUser.get();
             if (user.getFirebaseUid() == null) {
                 user.setFirebaseUid(uid);
@@ -44,7 +43,6 @@ public class FirebaseUserSyncServiceImpl implements FirebaseUserSyncService {
             LOGGER.info("Synced existing user: {}", email);
             return registeredUserRepository.save(user);
         } else {
-            // Create new user from Firebase data
             RegisteredUser newUser = new RegisteredUser();
             newUser.setEmail(email);
             newUser.setUserName(name != null ? name : email);

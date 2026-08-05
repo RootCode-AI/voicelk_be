@@ -60,7 +60,6 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateToken(authentication);
 
-        // Fetch user details from DB for the response
         RegisteredUser user = registeredUserRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -74,13 +73,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest registerRequest) {
 
-        // Check if email already exists
         if (registeredUserRepository.existsByEmail(registerRequest.getEmail())) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        // Create new registered user
         RegisteredUser registeredUser = new RegisteredUser();
         registeredUser.setUserName(registerRequest.getUserName());
         registeredUser.setEmail(registerRequest.getEmail());
@@ -97,16 +94,12 @@ public class AuthController {
     @PostMapping("/firebase")
     public ResponseEntity<?> authenticateWithFirebase(@RequestBody FirebaseLoginRequest firebaseLoginRequest) {
         try {
-            // 1. Verify the Firebase ID token
             FirebaseToken firebaseToken = firebaseTokenVerifier.verifyToken(firebaseLoginRequest.getIdToken());
 
-            // 2. Sync/create user in local DB
             RegisteredUser user = firebaseUserSyncService.syncFirebaseUser(firebaseToken);
 
-            // 3. Generate local JWT for the user
             String jwt = jwtUtils.generateTokenForUser(user.getEmail(), user.getRole());
 
-            // 4. Return same response format as regular login
             return ResponseEntity.ok(new JwtResponse(
                     jwt,
                     user.getUserId(),
@@ -119,4 +112,3 @@ public class AuthController {
         }
     }
 }
-

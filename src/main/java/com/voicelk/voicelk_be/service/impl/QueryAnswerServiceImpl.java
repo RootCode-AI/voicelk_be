@@ -34,18 +34,15 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
 
     @Override
     public QueryResponse submitQuery(QueryRequest queryRequest) {
-        // 1. Find the user
         User user = userRepository.findById(queryRequest.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + queryRequest.getUserId()));
 
-        // 2. Create and save the Query
         Query query = new Query();
         query.setInputText(queryRequest.getInputText());
         query.setSyllabusTopic(queryRequest.getSyllabusTopic());
         query.setUser(user);
         query = queryRepository.save(query);
 
-        // 3. Call Gemini to generate an answer
         String generatedText;
         if (queryRequest.getSyllabusTopic() != null && !queryRequest.getSyllabusTopic().isEmpty()) {
             String systemInstruction = "You are an educational assistant. "
@@ -56,14 +53,12 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
             generatedText = geminiService.generateAnswer(queryRequest.getInputText());
         }
 
-        // 4. Create and save the Answer
         Answer answer = new Answer();
         answer.setResponseText(generatedText);
         answer.setSource("Gemini Flash");
         answer.setQuery(query);
         answer = answerRepository.save(answer);
 
-        // 5. Build and return response
         return mapToResponse(query, answer);
     }
 
