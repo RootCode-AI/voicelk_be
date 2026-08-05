@@ -42,6 +42,20 @@ public class JwtUtils {
                 .compact();
     }
 
+    /**
+     * Generates a JWT token directly from email and role.
+     * Used for Firebase/OAuth login where AuthenticationManager is not involved.
+     */
+    public String generateTokenForUser(String email, String role) {
+        return Jwts.builder()
+                .subject(email)
+                .claim("role", role)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(key())
+                .compact();
+    }
+
     private Key key() {
         return new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
     }
