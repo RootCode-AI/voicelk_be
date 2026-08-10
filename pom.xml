@@ -89,6 +89,11 @@
 			<artifactId>firebase-admin</artifactId>
 			<version>9.4.3</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.http-client</groupId>
+			<artifactId>google-http-client-apache-v2</artifactId>
+			<version>1.43.3</version>
+		</dependency>
 	</dependencies>
 
 	
