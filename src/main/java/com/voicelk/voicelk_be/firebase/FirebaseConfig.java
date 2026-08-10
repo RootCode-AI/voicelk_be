@@ -14,6 +14,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.api.client.http.apache.v2.ApacheHttpTransport;
 
 @Configuration
 public class FirebaseConfig {
@@ -30,6 +31,7 @@ public class FirebaseConfig {
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setHttpTransport(new ApacheHttpTransport())
                     .build();
 
             LOGGER.info("Firebase initialized successfully");
