@@ -10,11 +10,13 @@ import org.springframework.stereotype.Service;
 import com.voicelk.voicelk_be.dto.QueryRequest;
 import com.voicelk.voicelk_be.dto.QueryResponse;
 import com.voicelk.voicelk_be.entity.Answer;
+import com.voicelk.voicelk_be.entity.Audio;
 import com.voicelk.voicelk_be.entity.GuestUser;
 import com.voicelk.voicelk_be.entity.Query;
 import com.voicelk.voicelk_be.entity.User;
 import com.voicelk.voicelk_be.llm.GeminiService;
 import com.voicelk.voicelk_be.repository.AnswerRepository;
+import com.voicelk.voicelk_be.repository.AudioRepository;
 import com.voicelk.voicelk_be.repository.GuestUserRepository;
 import com.voicelk.voicelk_be.repository.QueryRepository;
 import com.voicelk.voicelk_be.repository.UserRepository;
@@ -28,6 +30,9 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
 
     @Autowired
     private AnswerRepository answerRepository;
+
+    @Autowired
+    private AudioRepository audioRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -121,6 +126,13 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
             response.setAnswerId(answer.getAnswerId());
             response.setResponseText(answer.getResponseText());
             response.setSource(answer.getSource());
+
+            // Look up audio linked to this answer
+            audioRepository.findByAnswerAnswerId(answer.getAnswerId())
+                    .ifPresent(audio -> {
+                        response.setAudioId(audio.getAudioId());
+                        response.setAudioDuration(audio.getDuration());
+                    });
         }
 
         return response;

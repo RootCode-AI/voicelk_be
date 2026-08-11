@@ -21,4 +21,6 @@ public class QueryResponse {
     private String answerId;
     private String responseText;
     private String source;
+    private String audioId;
+    private Double audioDuration;
 }
