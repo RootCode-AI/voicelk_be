@@ -46,6 +46,7 @@ public class Query {
     private User user;
 
     @OneToOne(mappedBy = "query", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Answer answer;
 
     @PrePersist

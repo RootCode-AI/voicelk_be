@@ -70,14 +70,9 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        // .requestMatchers("/api/reg/**").permitAll()
                         .requestMatchers("/api/guest/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        // .requestMatchers("/api/users/**").permitAll()
-                        .requestMatchers("/hello").permitAll()
                         .requestMatchers("/api/ask").permitAll()
-                        // All other endpoints require authentication
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authProvider());

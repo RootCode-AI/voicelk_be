@@ -5,8 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class QueryRequest {
@@ -15,4 +15,5 @@ public class QueryRequest {
     private String syllabusTopic;
     private String userId;
     private String sessionId;
+
 }
