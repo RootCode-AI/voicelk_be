@@ -1,6 +1,7 @@
 package com.voicelk.voicelk_be.service.impl;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,10 +10,12 @@ import org.springframework.stereotype.Service;
 import com.voicelk.voicelk_be.dto.QueryRequest;
 import com.voicelk.voicelk_be.dto.QueryResponse;
 import com.voicelk.voicelk_be.entity.Answer;
+import com.voicelk.voicelk_be.entity.GuestUser;
 import com.voicelk.voicelk_be.entity.Query;
 import com.voicelk.voicelk_be.entity.User;
 import com.voicelk.voicelk_be.llm.GeminiService;
 import com.voicelk.voicelk_be.repository.AnswerRepository;
+import com.voicelk.voicelk_be.repository.GuestUserRepository;
 import com.voicelk.voicelk_be.repository.QueryRepository;
 import com.voicelk.voicelk_be.repository.UserRepository;
 import com.voicelk.voicelk_be.service.QueryAnswerService;
@@ -30,12 +33,32 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
     private UserRepository userRepository;
 
     @Autowired
+    private GuestUserRepository guestUserRepository;
+
+    @Autowired
     private GeminiService geminiService;
 
     @Override
-    public QueryResponse submitQuery(QueryRequest queryRequest) {
-        User user = userRepository.findById(queryRequest.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + queryRequest.getUserId()));
+    public QueryResponse submitQuery(QueryRequest queryRequest, String ipAddress) {
+        User user;
+
+        if (queryRequest.getUserId() != null && !queryRequest.getUserId().isEmpty()) {
+            // Registered user — look up by userId
+            user = userRepository.findById(queryRequest.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + queryRequest.getUserId()));
+        } else {
+            // Guest user — find existing GuestUser by IP or create a new one
+            user = guestUserRepository.findByIpAddress(ipAddress)
+                    .orElseGet(() -> {
+                        GuestUser guestUser = new GuestUser();
+                        guestUser.setRole("GUEST");
+                        guestUser.setIpAddress(ipAddress);
+                        guestUser.setSessionId(queryRequest.getSessionId() != null
+                                ? queryRequest.getSessionId()
+                                : UUID.randomUUID().toString());
+                        return guestUserRepository.save(guestUser);
+                    });
+        }
 
         Query query = new Query();
         query.setInputText(queryRequest.getInputText());
@@ -92,7 +115,7 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
         response.setInputText(query.getInputText());
         response.setSyllabusTopic(query.getSyllabusTopic());
         response.setTimestamp(query.getTimestamp());
-        response.setUserId(query.getUser().getUserId());
+        response.setUserId(query.getUser() != null ? query.getUser().getUserId() : null);
 
         if (answer != null) {
             response.setAnswerId(answer.getAnswerId());
