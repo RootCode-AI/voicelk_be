@@ -47,10 +47,12 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
         if (queryRequest.getSyllabusTopic() != null && !queryRequest.getSyllabusTopic().isEmpty()) {
             String systemInstruction = "You are an educational assistant. "
                     + "Answer the question related to the topic: " + queryRequest.getSyllabusTopic()
-                    + ". Keep the answer concise and within 100 words.";
+                    + ". Content must be less than or equal to 100 words.";
             generatedText = geminiService.generateAnswer(systemInstruction, queryRequest.getInputText());
         } else {
-            generatedText = geminiService.generateAnswer(queryRequest.getInputText());
+            String systemInstruction = "You are an educational assistant. "
+                    + "Content must be less than or equal to 100 words.";
+            generatedText = geminiService.generateAnswer(systemInstruction, queryRequest.getInputText());
         }
 
         Answer answer = new Answer();
