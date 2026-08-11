@@ -10,7 +10,7 @@ import com.voicelk.voicelk_be.dto.QueryResponse;
 @Service
 public interface QueryAnswerService {
 
-    QueryResponse submitQuery(QueryRequest queryRequest);
+    QueryResponse submitQuery(QueryRequest queryRequest, String ipAddress);
 
     QueryResponse getQueryWithAnswer(String queryId);
 

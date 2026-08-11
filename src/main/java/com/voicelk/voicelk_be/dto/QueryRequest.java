@@ -14,4 +14,5 @@ public class QueryRequest {
     private String inputText;
     private String syllabusTopic;
     private String userId;
+    private String sessionId;
 }

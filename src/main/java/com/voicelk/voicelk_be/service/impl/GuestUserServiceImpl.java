@@ -20,8 +20,9 @@ public class GuestUserServiceImpl implements GuestUserService {
     private GuestUserRepository guestUserRepository;
 
     @Override
-    public GuestUser createGuestUser(GuestUser guestUser) {
+    public GuestUser createGuestUser(GuestUser guestUser, String ipAddress) {
         guestUser.setRole("GUEST");
+        guestUser.setIpAddress(ipAddress);
         return guestUserRepository.save(guestUser);
     }
 

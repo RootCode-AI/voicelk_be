@@ -10,7 +10,7 @@ import com.voicelk.voicelk_be.entity.GuestUser;
 @Service
 public interface GuestUserService {
 
-    GuestUser createGuestUser(GuestUser guestUser);
+    GuestUser createGuestUser(GuestUser guestUser, String ipAddress); 
 
     Optional<GuestUser> getGuestUserById(String userId);
 
