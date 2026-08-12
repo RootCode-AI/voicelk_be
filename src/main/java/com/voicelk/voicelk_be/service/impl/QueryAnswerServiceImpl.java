@@ -71,15 +71,18 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
         query.setUser(user);
         query = queryRepository.save(query);
 
+        String systemInstruction = "You are an educational assistant for Sri Lankan O/L and A/L students. "
+                + "IMPORTANT RULES:\n"
+                + "- STRICT CONSTRAINT: Your response MUST be less than or equal to 100 words. If the explanation is naturally longer, you MUST summarize it to fit within 100 words. Do not exceed this limit under any circumstances.\n"
+                + "- The main content must be in Sinhala language.\n"
+                + "- You must mix Sinhala words with English technical terms where appropriate.\n"
+                + "- The explanation must be simple and easy to understand for O/L and A/L students.\n";
+
         String generatedText;
         if (queryRequest.getSyllabusTopic() != null && !queryRequest.getSyllabusTopic().isEmpty()) {
-            String systemInstruction = "You are an educational assistant. "
-                    + "Answer the question related to the topic: " + queryRequest.getSyllabusTopic()
-                    + ". Content must be less than or equal to 100 words.";
+            systemInstruction += "Answer the question related to the topic: " + queryRequest.getSyllabusTopic() + ".";
             generatedText = geminiService.generateAnswer(systemInstruction, queryRequest.getInputText());
         } else {
-            String systemInstruction = "You are an educational assistant. "
-                    + "Content must be less than or equal to 100 words.";
             generatedText = geminiService.generateAnswer(systemInstruction, queryRequest.getInputText());
         }
 
