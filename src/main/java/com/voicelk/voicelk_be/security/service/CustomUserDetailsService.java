@@ -24,9 +24,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         RegisteredUser registeredUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
+        String password = registeredUser.getPasswordHash() != null ? registeredUser.getPasswordHash() : "N/A";
         return new User(
                 registeredUser.getEmail(),
-                registeredUser.getPasswordHash(),
+                password,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + registeredUser.getRole()))
         );
     }
