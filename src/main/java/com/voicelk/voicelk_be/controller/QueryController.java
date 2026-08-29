@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voicelk.voicelk_be.dto.QueryDto;
 import com.voicelk.voicelk_be.entity.Query;
+import com.voicelk.voicelk_be.mapper.EntityMapper;
 import com.voicelk.voicelk_be.service.QueryService;
 
 @RestController
@@ -26,42 +28,47 @@ public class QueryController {
     @Autowired
     private QueryService queryService;
 
+    @Autowired
+    private EntityMapper entityMapper;
+
     @PostMapping
-    public ResponseEntity<Query> createQuery(@RequestBody Query query) {
+    public ResponseEntity<QueryDto> createQuery(@RequestBody Query query) {
         Query createdQuery = queryService.createQuery(query);
-        return new ResponseEntity<>(createdQuery, HttpStatus.CREATED);
+        return new ResponseEntity<>(entityMapper.toDto(createdQuery), HttpStatus.CREATED);
     }
 
     @GetMapping("/{queryId}")
-    public ResponseEntity<Query> getQueryById(@PathVariable String queryId) {
+    public ResponseEntity<QueryDto> getQueryById(@PathVariable String queryId) {
         return queryService.getQueryById(queryId)
+                .map(entityMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<Query>> getAllQueries() {
-        return ResponseEntity.ok(queryService.getAllQueries());
+    public ResponseEntity<List<QueryDto>> getAllQueries() {
+        return ResponseEntity.ok(entityMapper.toQueryDtoList(queryService.getAllQueries()));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Query>> getQueriesByUserId(@PathVariable String userId) {
-        return ResponseEntity.ok(queryService.getQueriesByUserId(userId));
+    public ResponseEntity<List<QueryDto>> getQueriesByUserId(@PathVariable String userId) {
+        return ResponseEntity.ok(entityMapper.toQueryDtoList(queryService.getQueriesByUserId(userId)));
     }
 
     @GetMapping("/topic/{syllabusTopic}")
-    public ResponseEntity<List<Query>> getQueriesBySyllabusTopic(@PathVariable String syllabusTopic) {
-        return ResponseEntity.ok(queryService.getQueriesBySyllabusTopic(syllabusTopic));
+    public ResponseEntity<List<QueryDto>> getQueriesBySyllabusTopic(@PathVariable String syllabusTopic) {
+        return ResponseEntity.ok(entityMapper.toQueryDtoList(queryService.getQueriesBySyllabusTopic(syllabusTopic)));
     }
 
     @GetMapping("/user/{userId}/recent")
-    public ResponseEntity<List<Query>> getQueriesByUserIdOrderByTimestamp(@PathVariable String userId) {
-        return ResponseEntity.ok(queryService.getQueriesByUserIdOrderByTimestamp(userId));
+    public ResponseEntity<List<QueryDto>> getQueriesByUserIdOrderByTimestamp(@PathVariable String userId) {
+        return ResponseEntity
+                .ok(entityMapper.toQueryDtoList(queryService.getQueriesByUserIdOrderByTimestamp(userId)));
     }
 
     @PutMapping("/{queryId}")
-    public ResponseEntity<Query> updateQuery(@PathVariable String queryId, @RequestBody Query query) {
-        return ResponseEntity.ok(queryService.updateQuery(queryId, query));
+    public ResponseEntity<QueryDto> updateQuery(@PathVariable String queryId, @RequestBody Query query) {
+        return ResponseEntity.ok(entityMapper.toDto(queryService.updateQuery(queryId, query)));
     }
 
     @DeleteMapping("/{queryId}")

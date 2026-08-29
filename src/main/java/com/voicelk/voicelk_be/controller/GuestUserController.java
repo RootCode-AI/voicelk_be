@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voicelk.voicelk_be.dto.GuestUserDto;
 import com.voicelk.voicelk_be.entity.GuestUser;
+import com.voicelk.voicelk_be.mapper.EntityMapper;
 import com.voicelk.voicelk_be.service.GuestUserService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,40 +29,43 @@ import lombok.RequiredArgsConstructor;
 public class GuestUserController {
 
     private final GuestUserService guestUserService;
+    private final EntityMapper entityMapper;
 
     @PostMapping
-    public ResponseEntity<GuestUser> createGuestUser(@RequestBody GuestUser guestUser,
+    public ResponseEntity<GuestUserDto> createGuestUser(@RequestBody GuestUser guestUser,
             HttpServletRequest request) {
         String ipAddress = getClientIpAddress(request);
         GuestUser createdUser = guestUserService.createGuestUser(guestUser, ipAddress);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        return new ResponseEntity<>(entityMapper.toDto(createdUser), HttpStatus.CREATED);
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<GuestUser> getGuestUserById(@PathVariable String userId) {
+    public ResponseEntity<GuestUserDto> getGuestUserById(@PathVariable String userId) {
         return guestUserService.getGuestUserById(userId)
+                .map(entityMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/session/{sessionId}")
-    public ResponseEntity<GuestUser> getGuestUserBySessionId(@PathVariable String sessionId) {
+    public ResponseEntity<GuestUserDto> getGuestUserBySessionId(@PathVariable String sessionId) {
         return guestUserService.getGuestUserBySessionId(sessionId)
+                .map(entityMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<GuestUser>> getAllGuestUsers() {
+    public ResponseEntity<List<GuestUserDto>> getAllGuestUsers() {
         List<GuestUser> guestUsers = guestUserService.getAllGuestUsers();
-        return ResponseEntity.ok(guestUsers);
+        return ResponseEntity.ok(entityMapper.toGuestUserDtoList(guestUsers));
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<GuestUser> updateGuestUser(@PathVariable String userId,
+    public ResponseEntity<GuestUserDto> updateGuestUser(@PathVariable String userId,
             @RequestBody GuestUser guestUser) {
         GuestUser updatedUser = guestUserService.updateGuestUser(userId, guestUser);
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(entityMapper.toDto(updatedUser));
     }
 
     @DeleteMapping("/{userId}")

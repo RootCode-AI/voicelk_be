@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voicelk.voicelk_be.dto.UserFeedbackDto;
 import com.voicelk.voicelk_be.entity.UserFeedback;
+import com.voicelk.voicelk_be.mapper.EntityMapper;
 import com.voicelk.voicelk_be.service.UserFeedbackService;
 
 @RestController
@@ -26,39 +28,44 @@ public class UserFeedbackController {
     @Autowired
     private UserFeedbackService userFeedbackService;
 
+    @Autowired
+    private EntityMapper entityMapper;
+
     @PostMapping
-    public ResponseEntity<UserFeedback> createFeedback(@RequestBody UserFeedback feedback) {
+    public ResponseEntity<UserFeedbackDto> createFeedback(@RequestBody UserFeedback feedback) {
         UserFeedback createdFeedback = userFeedbackService.createFeedback(feedback);
-        return new ResponseEntity<>(createdFeedback, HttpStatus.CREATED);
+        return new ResponseEntity<>(entityMapper.toDto(createdFeedback), HttpStatus.CREATED);
     }
 
     @GetMapping("/{feedbackId}")
-    public ResponseEntity<UserFeedback> getFeedbackById(@PathVariable String feedbackId) {
+    public ResponseEntity<UserFeedbackDto> getFeedbackById(@PathVariable String feedbackId) {
         return userFeedbackService.getFeedbackById(feedbackId)
+                .map(entityMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<UserFeedback>> getFeedbacksByUserId(@PathVariable String userId) {
-        return ResponseEntity.ok(userFeedbackService.getFeedbacksByUserId(userId));
+    public ResponseEntity<List<UserFeedbackDto>> getFeedbacksByUserId(@PathVariable String userId) {
+        return ResponseEntity.ok(entityMapper.toUserFeedbackDtoList(userFeedbackService.getFeedbacksByUserId(userId)));
     }
 
     @GetMapping("/audio/{audioId}")
-    public ResponseEntity<UserFeedback> getFeedbackByAudioId(@PathVariable String audioId) {
+    public ResponseEntity<UserFeedbackDto> getFeedbackByAudioId(@PathVariable String audioId) {
         return userFeedbackService.getFeedbackByAudioId(audioId)
+                .map(entityMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<UserFeedback>> getAllFeedbacks() {
-        return ResponseEntity.ok(userFeedbackService.getAllFeedbacks());
+    public ResponseEntity<List<UserFeedbackDto>> getAllFeedbacks() {
+        return ResponseEntity.ok(entityMapper.toUserFeedbackDtoList(userFeedbackService.getAllFeedbacks()));
     }
 
     @PutMapping("/{feedbackId}")
-    public ResponseEntity<UserFeedback> updateFeedback(@PathVariable String feedbackId, @RequestBody UserFeedback feedback) {
-        return ResponseEntity.ok(userFeedbackService.updateFeedback(feedbackId, feedback));
+    public ResponseEntity<UserFeedbackDto> updateFeedback(@PathVariable String feedbackId, @RequestBody UserFeedback feedback) {
+        return ResponseEntity.ok(entityMapper.toDto(userFeedbackService.updateFeedback(feedbackId, feedback)));
     }
 
     @DeleteMapping("/{feedbackId}")
