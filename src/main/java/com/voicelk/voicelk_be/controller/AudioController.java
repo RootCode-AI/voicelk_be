@@ -25,7 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.voicelk.voicelk_be.dto.AudioDto;
 import com.voicelk.voicelk_be.entity.Audio;
+import com.voicelk.voicelk_be.mapper.EntityMapper;
 import com.voicelk.voicelk_be.service.AudioService;
 import com.voicelk.voicelk_be.service.SupabaseStorageService;
 
@@ -40,14 +42,17 @@ public class AudioController {
     @Autowired
     private SupabaseStorageService supabaseStorageService;
 
+    @Autowired
+    private EntityMapper entityMapper;
+
     @PostMapping
-    public ResponseEntity<Audio> createAudio(@RequestBody Audio audio) {
+    public ResponseEntity<AudioDto> createAudio(@RequestBody Audio audio) {
         Audio createdAudio = audioService.createAudio(audio);
-        return new ResponseEntity<>(createdAudio, HttpStatus.CREATED);
+        return new ResponseEntity<>(entityMapper.toDto(createdAudio), HttpStatus.CREATED);
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Audio> uploadAudio(
+    public ResponseEntity<AudioDto> uploadAudio(
             @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @org.springframework.web.bind.annotation.RequestParam("answerId") String answerId,
             @org.springframework.web.bind.annotation.RequestParam(value = "format", required = false) String format,
@@ -72,7 +77,7 @@ public class AudioController {
             audio.setAnswer(answer);
 
             Audio createdAudio = audioService.createAudio(audio);
-            return new ResponseEntity<>(createdAudio, HttpStatus.CREATED);
+            return new ResponseEntity<>(entityMapper.toDto(createdAudio), HttpStatus.CREATED);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,27 +87,29 @@ public class AudioController {
     }
 
     @GetMapping("/{audioId}")
-    public ResponseEntity<Audio> getAudioById(@PathVariable String audioId) {
+    public ResponseEntity<AudioDto> getAudioById(@PathVariable String audioId) {
         return audioService.getAudioById(audioId)
+                .map(entityMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/answer/{answerId}")
-    public ResponseEntity<Audio> getAudioByAnswerId(@PathVariable String answerId) {
+    public ResponseEntity<AudioDto> getAudioByAnswerId(@PathVariable String answerId) {
         return audioService.getAudioByAnswerId(answerId)
+                .map(entityMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<Audio>> getAllAudios() {
-        return ResponseEntity.ok(audioService.getAllAudios());
+    public ResponseEntity<List<AudioDto>> getAllAudios() {
+        return ResponseEntity.ok(entityMapper.toAudioDtoList(audioService.getAllAudios()));
     }
 
     @PutMapping("/{audioId}")
-    public ResponseEntity<Audio> updateAudio(@PathVariable String audioId, @RequestBody Audio audio) {
-        return ResponseEntity.ok(audioService.updateAudio(audioId, audio));
+    public ResponseEntity<AudioDto> updateAudio(@PathVariable String audioId, @RequestBody Audio audio) {
+        return ResponseEntity.ok(entityMapper.toDto(audioService.updateAudio(audioId, audio)));
     }
 
     @DeleteMapping("/{audioId}")

@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voicelk.voicelk_be.dto.UserDto;
 import com.voicelk.voicelk_be.entity.User;
+import com.voicelk.voicelk_be.mapper.EntityMapper;
 import com.voicelk.voicelk_be.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,30 +28,32 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
     private final UserService userService;
+    private final EntityMapper entityMapper;
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<UserDto> createUser(@RequestBody User user) {
         User createdUser = userService.createUser(user);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        return new ResponseEntity<>(entityMapper.toDto(createdUser), HttpStatus.CREATED);
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getUserById(@PathVariable String userId) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable String userId) {
         return userService.getUserById(userId)
+                .map(entityMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(entityMapper.toUserDtoList(users));
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<User> updateUser(@PathVariable String userId, @RequestBody User user) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable String userId, @RequestBody User user) {
         User updatedUser = userService.updateUser(userId, user);
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(entityMapper.toDto(updatedUser));
     }
 
     @DeleteMapping("/{userId}")
