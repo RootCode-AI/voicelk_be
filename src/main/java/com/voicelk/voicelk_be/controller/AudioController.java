@@ -7,12 +7,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,8 +23,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.voicelk.voicelk_be.dto.AudioDto;
 import com.voicelk.voicelk_be.entity.Audio;
@@ -59,7 +58,7 @@ public class AudioController {
             @org.springframework.web.bind.annotation.RequestParam(value = "duration", required = false) Double duration,
             @org.springframework.web.bind.annotation.RequestParam(value = "modelVersion", required = false) String modelVersion,
             @org.springframework.web.bind.annotation.RequestParam(value = "processingTime", required = false) Double processingTime) {
-        
+
         try {
             // 1. Upload to Supabase Storage
             String fileUrl = supabaseStorageService.uploadFile(file, "audios", "uploads");
@@ -71,7 +70,7 @@ public class AudioController {
             audio.setDuration(duration);
             audio.setModelVersion(modelVersion);
             audio.setProcessingTime(processingTime);
-            
+
             com.voicelk.voicelk_be.entity.Answer answer = new com.voicelk.voicelk_be.entity.Answer();
             answer.setAnswerId(answerId);
             audio.setAnswer(answer);
@@ -82,7 +81,7 @@ public class AudioController {
         } catch (Exception e) {
             e.printStackTrace();
             throw new org.springframework.web.server.ResponseStatusException(
-                HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+                    HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
         }
     }
 
