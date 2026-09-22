@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -73,6 +74,12 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/guest/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/ask").permitAll()
+                        // Status checks stay public; producing audio (preview, voicing an
+                        // answer) is for registered users only — guests get text answers.
+                        .requestMatchers(HttpMethod.GET, "/api/tts/health", "/api/tts/models").permitAll()
+                        // Failed requests are forwarded here; without this the caller sees
+                        // a 401 instead of the real error (e.g. 503 when the bridge is down).
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authProvider());
