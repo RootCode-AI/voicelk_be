@@ -24,15 +24,28 @@ public class SupabaseStorageServiceImpl implements SupabaseStorageService {
 
     @Override
     public String uploadFile(MultipartFile file, String bucketName, String pathPrefix) throws Exception {
-        String originalFilename = file.getOriginalFilename();
+        return upload(file.getBytes(), file.getOriginalFilename(), file.getContentType(), bucketName, pathPrefix);
+    }
+
+    @Override
+    public String uploadBytes(byte[] content, String fileName, String contentType, String bucketName,
+            String pathPrefix) throws Exception {
+        if (content == null || content.length == 0) {
+            throw new IllegalArgumentException("Refusing to upload an empty file.");
+        }
+        return upload(content, fileName, contentType, bucketName, pathPrefix);
+    }
+
+    private String upload(byte[] content, String originalFilename, String mimeType, String bucketName,
+            String pathPrefix) {
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        
+
         // Generate a unique filename
         String fileName = pathPrefix + "/" + UUID.randomUUID().toString() + extension;
-        
+
         // Supabase REST API endpoint for uploading
         String uploadUrl = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + fileName;
 
@@ -41,18 +54,18 @@ public class SupabaseStorageServiceImpl implements SupabaseStorageService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + supabaseKey);
         headers.set("apikey", supabaseKey);
-        
-        String mimeType = file.getContentType();
+
         if (mimeType == null) {
             mimeType = "application/octet-stream";
         }
         headers.set("Content-Type", mimeType);
 
         // Supabase expects the raw bytes of the file for binary uploads
-        HttpEntity<byte[]> requestEntity = new HttpEntity<>(file.getBytes(), headers);
+        HttpEntity<byte[]> requestEntity = new HttpEntity<>(content, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(uploadUrl, HttpMethod.POST, requestEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(uploadUrl, HttpMethod.POST, requestEntity,
+                    String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 return supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;

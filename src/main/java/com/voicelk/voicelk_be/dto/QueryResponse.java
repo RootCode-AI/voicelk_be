@@ -22,5 +22,11 @@ public class QueryResponse {
     private String responseText;
     private String source;
     private String audioId;
+    private String audioUrl;
+    /** GENERATED, FAILED, DISABLED, GUEST_TEXT_ONLY or NOT_GENERATED. */
+    private String audioStatus;
+    /** Why generation failed; only set when audioStatus is FAILED. */
+    private String audioError;
+    private String audioModelVersion;
     private Double audioDuration;
 }
