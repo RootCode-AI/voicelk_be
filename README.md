@@ -7,7 +7,7 @@ VoiceLK is a robust Text-to-Speech (TTS) platform backend built with **Spring Bo
 - **Framework**: Spring Boot 3 / Java
 - **Database**: Supabase PostgreSQL (via Spring Data JPA)
 - **File Storage**: Supabase Storage REST API
-- **AI Integration**: Google Gemini API (`gemini-3.1-flash-lite`)
+- **AI Integration**: Google Gemini API (`gemini-3.5-flash`)
 - **Authentication**: Spring Security with JWT (JSON Web Tokens)
 - **Push Notifications / Auth Sync**: Firebase Admin SDK (Optional integration)
 
@@ -21,21 +21,21 @@ VoiceLK is a robust Text-to-Speech (TTS) platform backend built with **Spring Bo
 
 ## 🛠️ Environment Setup
 
-To run this project locally, create a `.env` file in the root directory (or inject these via your IDE):
+To run this project locally, copy [`.env.example`](.env.example) to `.env` and fill it in (or inject the same variables via your IDE). `JWT_SECRET` is required and must be at least 32 characters.
 
-```env
-# Database Connection (Supabase PostgreSQL)
-SUPABASE_DB_URL=jdbc:postgresql://<your-db-url>:5432/postgres?user=<user>&password=<pass>
+For Firebase, either place `firebase-service-account.json` in `src/main/resources/` (it is git-ignored) or set `FIREBASE_CREDENTIALS_JSON`.
 
-# Google Gemini API
-GEMINI_API_KEY=your_gemini_api_key_here
+---
 
-# Supabase Storage Credentials (Service Role Key recommended for bypassing RLS)
-SUPABASE_URL=https://<your-project-ref>.supabase.co
-SUPABASE_KEY=your_service_role_key_here
-```
+## ☁️ Deploying (Azure, `api.voicelk.dev`)
 
-*Note: Ensure you place your `firebase-service-account.json` in the project root if utilizing Firebase features.*
+The [`Dockerfile`](Dockerfile) builds a self-contained image; Azure Container Apps (or App Service for Containers) runs it. Nothing secret is in the image — set every variable from `.env.example` as an app setting / secret, with `FIREBASE_CREDENTIALS_JSON` holding the service account JSON.
+
+1. Build and push the image, create the app with ingress target port `8082` (or set `PORT`).
+2. Point `TTS_BRIDGE_URL` at the bridge on the VPS over HTTPS and set `TTS_BRIDGE_API_KEY`.
+3. Custom domain: add `CNAME api → <app>.<region>.azurecontainerapps.io` and `TXT asuid.api → <verification id>`, then bind `api.voicelk.dev` with a free managed certificate. `.dev` is HTTPS-only in browsers.
+4. CORS allows `https://chat.voicelk.dev` and the local Vite server by default; override with `CORS_ALLOWED_ORIGINS`.
+5. The client address comes from the proxy's `X-Forwarded-For`, trusted only from internal proxy addresses. After deploying, check that new guest records carry real public addresses; if they all show one internal address, set `SERVER_TOMCAT_REMOTEIP_INTERNALPROXIES` to a regex matching the ingress.
 
 ---
 

@@ -1,0 +1,13 @@
+# Secrets must never end up in an image layer.
+.env
+.env.*
+!.env.example
+src/main/resources/firebase-service-account.json
+
+target/
+.git/
+.github/
+.mvn/
+.vscode/
+.idea/
+*.md

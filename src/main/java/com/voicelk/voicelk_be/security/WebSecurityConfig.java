@@ -3,6 +3,7 @@ package com.voicelk.voicelk_be.security;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,6 +34,9 @@ public class WebSecurityConfig {
 
     @Autowired
     private AuthEntryPointJwt authEntryPointJwt;
+
+    @Value("${app.cors.allowed-origins}")
+    private String[] allowedOrigins;
 
     @Bean
     public AuthTokenFilter authTokenFilter() {
@@ -76,7 +80,10 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/ask").permitAll()
                         // Status checks stay public; producing audio (preview, voicing an
                         // answer) is for registered users only — guests get text answers.
-                        .requestMatchers(HttpMethod.GET, "/api/tts/health", "/api/tts/models").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tts/health", "/api/tts/models", "/api/tts/voices").permitAll()
+                        // Guests play back their free clips here; the controller only
+                        // serves an anonymous caller the clips generated from their address.
+                        .requestMatchers(HttpMethod.GET, "/api/audios/*/stream").permitAll()
                         // Failed requests are forwarded here; without this the caller sees
                         // a 401 instead of the real error (e.g. 503 when the bridge is down).
                         .requestMatchers("/error").permitAll()
@@ -91,7 +98,7 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedOrigins(List.of(allowedOrigins));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));

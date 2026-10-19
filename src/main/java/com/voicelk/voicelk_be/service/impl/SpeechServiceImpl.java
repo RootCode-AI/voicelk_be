@@ -19,6 +19,7 @@ import com.voicelk.voicelk_be.service.SpeechService;
 import com.voicelk.voicelk_be.service.SupabaseStorageService;
 import com.voicelk.voicelk_be.tts.SpeechSynthesisResult;
 import com.voicelk.voicelk_be.tts.TtsBridgeClient;
+import com.voicelk.voicelk_be.tts.VoiceCatalog;
 
 /**
  * Orchestrates one round of speech generation.
@@ -59,8 +60,8 @@ public class SpeechServiceImpl implements SpeechService {
     @Value("${tts.auto-generate:true}")
     private boolean autoGenerate;
 
-    @Value("${tts.default-model:}")
-    private String defaultModel;
+    @Autowired
+    private VoiceCatalog voiceCatalog;
 
     @Value("${tts.default-speaker-id:0}")
     private Integer defaultSpeakerId;
@@ -121,9 +122,7 @@ public class SpeechServiceImpl implements SpeechService {
     // -----------------------------------------------------------------------
 
     private SpeechSynthesisResult synthesize(String text, TtsRequest options) {
-        String model = options != null && options.getModel() != null && !options.getModel().isBlank()
-                ? options.getModel()
-                : (defaultModel == null || defaultModel.isBlank() ? null : defaultModel);
+        String model = voiceCatalog.resolve(options == null ? null : options.getModel());
 
         Integer speakerId = options != null && options.getSpeakerId() != null
                 ? options.getSpeakerId()

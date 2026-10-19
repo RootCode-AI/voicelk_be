@@ -16,4 +16,7 @@ public class QueryRequest {
     private String userId;
     private String sessionId;
 
+    /** Voice key for the answer's audio; empty uses the configured default voice. */
+    private String voiceModel;
+
 }

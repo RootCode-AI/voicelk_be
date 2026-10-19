@@ -1,5 +1,6 @@
 package com.voicelk.voicelk_be.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +8,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,10 +18,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.voicelk.voicelk_be.dto.AudioDto;
 import com.voicelk.voicelk_be.dto.TtsRequest;
+import com.voicelk.voicelk_be.dto.VoiceDto;
 import com.voicelk.voicelk_be.service.SpeechService;
 import com.voicelk.voicelk_be.tts.SpeechSynthesisResult;
 import com.voicelk.voicelk_be.tts.TtsBridgeClient;
 import com.voicelk.voicelk_be.tts.TtsBridgeException;
+import com.voicelk.voicelk_be.tts.VoiceCatalog;
 
 /**
  * Speech endpoints of the backend.
@@ -32,7 +34,6 @@ import com.voicelk.voicelk_be.tts.TtsBridgeException;
  */
 @RestController
 @RequestMapping("/api/tts")
-@CrossOrigin(origins = "*")
 public class SpeechController {
 
     @Autowired
@@ -40,6 +41,9 @@ public class SpeechController {
 
     @Autowired
     private TtsBridgeClient ttsBridgeClient;
+
+    @Autowired
+    private VoiceCatalog voiceCatalog;
 
     /** Renders text and streams the clip straight back; nothing is stored. */
     @PostMapping(value = "/preview", produces = "audio/wav")
@@ -75,6 +79,8 @@ public class SpeechController {
         try {
             AudioDto audio = speechService.generateForAnswer(answerId, request);
             return ResponseEntity.ok(audio);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         } catch (TtsBridgeException e) {
             throw bridgeFailure(e);
         }
@@ -84,6 +90,20 @@ public class SpeechController {
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
         return ResponseEntity.ok(ttsBridgeClient.health());
+    }
+
+    /** Voices a client may offer its users, in display order; the keys go back as the model. */
+    @GetMapping("/voices")
+    public ResponseEntity<List<VoiceDto>> voices() {
+        String defaultKey = voiceCatalog.defaultKey();
+        List<VoiceDto> voices = voiceCatalog.voices().stream()
+                .map(voice -> new VoiceDto(
+                        voice.key(),
+                        voice.name() == null || voice.name().isBlank() ? voice.key() : voice.name(),
+                        voice.description(),
+                        voice.key().equals(defaultKey)))
+                .toList();
+        return ResponseEntity.ok(voices);
     }
 
     /** Models the bridge can serve right now. */
