@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.voicelk.voicelk_be.dto.QueryRequest;
 import com.voicelk.voicelk_be.dto.QueryResponse;
+import com.voicelk.voicelk_be.dto.TtsRequest;
 import com.voicelk.voicelk_be.entity.Answer;
 import com.voicelk.voicelk_be.entity.Audio;
 import com.voicelk.voicelk_be.entity.GuestUser;
@@ -127,7 +128,9 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
         String audioError = null;
         if (speechService.isAutoGenerationEnabled() && !guest) {
             try {
-                speechService.generateForAnswer(answer.getAnswerId(), null);
+                TtsRequest voice = new TtsRequest();
+                voice.setModel(queryRequest.getVoiceModel());
+                speechService.generateForAnswer(answer.getAnswerId(), voice);
             } catch (Exception e) {
                 audioError = e.getMessage();
                 LOGGER.warn("Audio was not generated for answer {}: {}", answer.getAnswerId(), audioError, e);
