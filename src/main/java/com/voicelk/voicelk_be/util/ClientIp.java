@@ -5,9 +5,14 @@ import jakarta.servlet.http.HttpServletRequest;
 /**
  * The address a request came from, as used to recognise a returning guest.
  *
- * <p>Proxy headers are checked before the socket address because in deployment the
- * backend sits behind a reverse proxy on the same machine, which records the real
- * client there.
+ * <p>Behind a proxy (Azure's ingress, or nginx on the same machine) the servlet container
+ * resolves the real client from X-Forwarded-For, because
+ * {@code server.forward-headers-strategy=native} trusts that header only on requests that
+ * arrive from an internal proxy address. The header is not read here: its first entry is
+ * whatever the client sent, so trusting it would let anyone choose their own address.
+ *
+ * <p>Some proxies, Azure App Service among them, record the client as {@code address:port}.
+ * The port changes with every connection, so it is dropped.
  */
 public final class ClientIp {
 
@@ -15,21 +20,24 @@ public final class ClientIp {
     }
 
     public static String of(HttpServletRequest request) {
-        String ipAddress = request.getHeader("X-Forwarded-For");
+        return withoutPort(request.getRemoteAddr());
+    }
 
-        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("Proxy-Client-IP");
+    static String withoutPort(String address) {
+        if (address == null) {
+            return null;
         }
-        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("WL-Proxy-Client-IP");
+        String trimmed = address.trim();
+        // [IPv6]:port
+        if (trimmed.startsWith("[")) {
+            int end = trimmed.indexOf(']');
+            return end > 0 ? trimmed.substring(1, end) : trimmed;
         }
-        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getRemoteAddr();
+        // IPv4:port. A bare IPv6 address has several colons and is left alone.
+        int colon = trimmed.indexOf(':');
+        if (colon > 0 && colon == trimmed.lastIndexOf(':')) {
+            return trimmed.substring(0, colon);
         }
-        if (ipAddress != null && ipAddress.contains(",")) {
-            ipAddress = ipAddress.split(",")[0].trim();
-        }
-
-        return ipAddress;
+        return trimmed;
     }
 }
