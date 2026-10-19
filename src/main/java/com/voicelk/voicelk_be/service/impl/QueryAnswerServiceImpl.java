@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.voicelk.voicelk_be.dto.QueryRequest;
@@ -38,8 +39,10 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
     private static final String AUDIO_FAILED = "FAILED";
     /** Automatic generation is switched off (tts.auto-generate=false). */
     private static final String AUDIO_DISABLED = "DISABLED";
-    /** The question came from a guest, who receives the text answer only. */
+    /** The question came from a guest and guest audio is switched off (tts.guest-audio-limit=0). */
     private static final String AUDIO_GUEST = "GUEST_TEXT_ONLY";
+    /** The guest has used every free clip; the answer is text only. */
+    private static final String AUDIO_GUEST_LIMIT = "GUEST_LIMIT_REACHED";
     /** No clip is stored for this answer. */
     private static final String AUDIO_MISSING = "NOT_GENERATED";
 
@@ -63,6 +66,10 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
 
     @Autowired
     private SpeechService speechService;
+
+    /** Clips a guest may generate in total, counted per guest (one guest per IP address). */
+    @Value("${tts.guest-audio-limit:3}")
+    private int guestAudioLimit;
 
     @Override
     public QueryResponse submitQuery(QueryRequest queryRequest, String ipAddress) {
@@ -123,14 +130,22 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
         // Voicing the answer never blocks the text reply: when the model service or
         // storage fails the user still gets the answer, the reason travels back in
         // audioError, and the clip can be requested again through the speech endpoints.
-        // Guests get the text answer only; voicing is a registered-user feature.
+        // Guests get a few clips in the default voice, then the text answer only.
         boolean guest = user instanceof GuestUser;
+        int guestClipsUsed = guest ? (int) audioRepository.countByAnswerQueryUserUserId(user.getUserId()) : 0;
+        boolean guestOverLimit = guest && guestClipsUsed >= guestAudioLimit;
+
         String audioError = null;
-        if (speechService.isAutoGenerationEnabled() && !guest) {
+        if (speechService.isAutoGenerationEnabled() && !guestOverLimit) {
             try {
                 TtsRequest voice = new TtsRequest();
-                voice.setModel(queryRequest.getVoiceModel());
+                if (!guest) {
+                    voice.setModel(queryRequest.getVoiceModel());
+                }
                 speechService.generateForAnswer(answer.getAnswerId(), voice);
+                if (guest) {
+                    guestClipsUsed++;
+                }
             } catch (Exception e) {
                 audioError = e.getMessage();
                 LOGGER.warn("Audio was not generated for answer {}: {}", answer.getAnswerId(), audioError, e);
@@ -138,8 +153,15 @@ public class QueryAnswerServiceImpl implements QueryAnswerService {
         }
 
         QueryResponse response = mapToResponse(query, answer);
-        if (guest) {
+        if (guest && guestAudioLimit > 0) {
+            response.setGuestAudioLimit(guestAudioLimit);
+            response.setGuestAudioRemaining(Math.max(guestAudioLimit - guestClipsUsed, 0));
+        }
+
+        if (guest && guestAudioLimit <= 0) {
             response.setAudioStatus(AUDIO_GUEST);
+        } else if (guestOverLimit) {
+            response.setAudioStatus(AUDIO_GUEST_LIMIT);
         } else if (audioError != null) {
             response.setAudioStatus(AUDIO_FAILED);
             response.setAudioError(audioError);

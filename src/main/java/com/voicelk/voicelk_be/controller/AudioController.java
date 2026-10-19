@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -14,6 +15,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,9 +30,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.voicelk.voicelk_be.dto.AudioDto;
 import com.voicelk.voicelk_be.entity.Audio;
+import com.voicelk.voicelk_be.entity.GuestUser;
+import com.voicelk.voicelk_be.entity.User;
 import com.voicelk.voicelk_be.mapper.EntityMapper;
 import com.voicelk.voicelk_be.service.AudioService;
 import com.voicelk.voicelk_be.service.SupabaseStorageService;
+import com.voicelk.voicelk_be.util.ClientIp;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/audios")
@@ -122,12 +131,18 @@ public class AudioController {
      * Returns the audio binary with the appropriate content type.
      */
     @GetMapping("/{audioId}/stream")
-    public ResponseEntity<?> streamAudio(@PathVariable String audioId) {
+    public ResponseEntity<?> streamAudio(@PathVariable String audioId, HttpServletRequest request) {
         Audio audio = audioService.getAudioById(audioId)
                 .orElse(null);
 
         if (audio == null || audio.getFilePath() == null) {
             return ResponseEntity.notFound().build();
+        }
+
+        // Signed-in users may play any clip. Without a session the request can only
+        // be a guest playing back their own free clip, recognised by address.
+        if (!isSignedIn() && !belongsToGuestAt(audio, ClientIp.of(request))) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String path = audio.getFilePath();
@@ -172,5 +187,24 @@ public class AudioController {
                 .contentLength(file.length())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
                 .body(resource);
+    }
+
+    private static boolean isSignedIn() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken);
+    }
+
+    private static boolean belongsToGuestAt(Audio audio, String ipAddress) {
+        if (audio.getAnswer() == null || audio.getAnswer().getQuery() == null) {
+            return false;
+        }
+        User owner = audio.getAnswer().getQuery().getUser();
+        // The proxy may hide a lazily loaded subclass, so unwrap it before the type check.
+        Object unwrapped = Hibernate.unproxy(owner);
+        return unwrapped instanceof GuestUser guest
+                && ipAddress != null
+                && ipAddress.equals(guest.getIpAddress());
     }
 }

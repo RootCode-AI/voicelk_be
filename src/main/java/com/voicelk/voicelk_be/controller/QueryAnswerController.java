@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.voicelk.voicelk_be.dto.QueryRequest;
 import com.voicelk.voicelk_be.dto.QueryResponse;
 import com.voicelk.voicelk_be.service.QueryAnswerService;
+import com.voicelk.voicelk_be.util.ClientIp;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -30,7 +31,7 @@ public class QueryAnswerController {
     @PostMapping
     public ResponseEntity<QueryResponse> submitQuery(@RequestBody QueryRequest queryRequest,
             HttpServletRequest request) {
-        String ipAddress = getClientIpAddress(request);
+        String ipAddress = ClientIp.of(request);
         QueryResponse response = queryAnswerService.submitQuery(queryRequest, ipAddress);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -45,28 +46,5 @@ public class QueryAnswerController {
     public ResponseEntity<List<QueryResponse>> getQueryHistory(@PathVariable String userId) {
         List<QueryResponse> history = queryAnswerService.getQueryHistoryByUserId(userId);
         return ResponseEntity.ok(history);
-    }
-
-    /**
-     * Extracts the real client IP address from the request.
-     * Checks proxy headers first, then falls back to the direct remote address.
-     */
-    private String getClientIpAddress(HttpServletRequest request) {
-        String ipAddress = request.getHeader("X-Forwarded-For");
-
-        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("Proxy-Client-IP");
-        }
-        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getRemoteAddr();
-        }
-        if (ipAddress != null && ipAddress.contains(",")) {
-            ipAddress = ipAddress.split(",")[0].trim();
-        }
-
-        return ipAddress;
     }
 }

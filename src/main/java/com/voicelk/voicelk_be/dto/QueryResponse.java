@@ -23,10 +23,14 @@ public class QueryResponse {
     private String source;
     private String audioId;
     private String audioUrl;
-    /** GENERATED, FAILED, DISABLED, GUEST_TEXT_ONLY or NOT_GENERATED. */
+    /** GENERATED, FAILED, DISABLED, GUEST_TEXT_ONLY, GUEST_LIMIT_REACHED or NOT_GENERATED. */
     private String audioStatus;
     /** Why generation failed; only set when audioStatus is FAILED. */
     private String audioError;
     private String audioModelVersion;
     private Double audioDuration;
+    /** How many free clips a guest may still generate; null for registered users. */
+    private Integer guestAudioRemaining;
+    /** The free-clip allowance for guests; null for registered users. */
+    private Integer guestAudioLimit;
 }

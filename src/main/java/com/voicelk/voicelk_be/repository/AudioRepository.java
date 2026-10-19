@@ -11,4 +11,7 @@ import com.voicelk.voicelk_be.entity.Audio;
 public interface AudioRepository extends JpaRepository<Audio, String> {
 
     Optional<Audio> findByAnswerAnswerId(String answerId);
+
+    /** Clips generated for one user's questions; used to cap what a guest may produce. */
+    long countByAnswerQueryUserUserId(String userId);
 }

@@ -7,7 +7,7 @@ VoiceLK is a robust Text-to-Speech (TTS) platform backend built with **Spring Bo
 - **Framework**: Spring Boot 3 / Java
 - **Database**: Supabase PostgreSQL (via Spring Data JPA)
 - **File Storage**: Supabase Storage REST API
-- **AI Integration**: Google Gemini API (`gemini-3.1-flash-lite`)
+- **AI Integration**: Google Gemini API (`gemini-3.5-flash`)
 - **Authentication**: Spring Security with JWT (JSON Web Tokens)
 - **Push Notifications / Auth Sync**: Firebase Admin SDK (Optional integration)
 

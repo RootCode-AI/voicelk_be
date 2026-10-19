@@ -77,6 +77,9 @@ public class WebSecurityConfig {
                         // Status checks stay public; producing audio (preview, voicing an
                         // answer) is for registered users only — guests get text answers.
                         .requestMatchers(HttpMethod.GET, "/api/tts/health", "/api/tts/models", "/api/tts/voices").permitAll()
+                        // Guests play back their free clips here; the controller only
+                        // serves an anonymous caller the clips generated from their address.
+                        .requestMatchers(HttpMethod.GET, "/api/audios/*/stream").permitAll()
                         // Failed requests are forwarded here; without this the caller sees
                         // a 401 instead of the real error (e.g. 503 when the bridge is down).
                         .requestMatchers("/error").permitAll()
