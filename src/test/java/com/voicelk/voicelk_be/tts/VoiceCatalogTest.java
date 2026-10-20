@@ -16,9 +16,9 @@ class VoiceCatalogTest {
             .withUserConfiguration(VoiceCatalog.class);
 
     private static final String[] VOICES = {
-            "tts.default-model=pathnirwana",
-            "tts.voices[0].key=pathnirwana",
-            "tts.voices[0].name=Pathnirwana",
+            "tts.default-model=speaker_03",
+            "tts.voices[0].key=speaker_03",
+            "tts.voices[0].name=Speaker 03",
             "tts.voices[1].key=speaker_01",
             "tts.voices[1].name=Speaker 01",
             "tts.voices[2].key=speaker_02",
@@ -29,10 +29,10 @@ class VoiceCatalogTest {
     void bindsVoicesFromPropertiesAndHidesDisabledOnes() {
         runner.withPropertyValues(VOICES).run(context -> {
             VoiceCatalog catalog = context.getBean(VoiceCatalog.class);
-            assertEquals(List.of("pathnirwana", "speaker_01"),
+            assertEquals(List.of("speaker_03", "speaker_01"),
                     catalog.voices().stream().map(TtsVoiceProperties.Voice::key).toList());
             assertEquals("Speaker 01", catalog.voices().get(1).name());
-            assertEquals("pathnirwana", catalog.defaultKey());
+            assertEquals("speaker_03", catalog.defaultKey());
         });
     }
 
@@ -41,8 +41,8 @@ class VoiceCatalogTest {
         runner.withPropertyValues(VOICES).run(context -> {
             VoiceCatalog catalog = context.getBean(VoiceCatalog.class);
             assertEquals("speaker_01", catalog.resolve("speaker_01"));
-            assertEquals("pathnirwana", catalog.resolve(null));
-            assertEquals("pathnirwana", catalog.resolve(" "));
+            assertEquals("speaker_03", catalog.resolve(null));
+            assertEquals("speaker_03", catalog.resolve(" "));
         });
     }
 
@@ -57,7 +57,7 @@ class VoiceCatalogTest {
 
     @Test
     void refusesADefaultThatIsNotOnOffer() {
-        runner.withPropertyValues("tts.default-model=speaker_02", "tts.voices[0].key=pathnirwana")
+        runner.withPropertyValues("tts.default-model=speaker_02", "tts.voices[0].key=speaker_03")
                 .run(context -> assertTrue(context.getStartupFailure() != null));
     }
 
