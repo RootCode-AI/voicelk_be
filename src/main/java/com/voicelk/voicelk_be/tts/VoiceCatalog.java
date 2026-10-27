@@ -17,9 +17,10 @@ import com.voicelk.voicelk_be.tts.TtsVoiceProperties.Voice;
  * The voices a client may ask for, and the gate every speech request passes through.
  *
  * <p>A request names a voice by its key; that key is checked here before it reaches
- * the bridge, so a client can only select a model that is listed and enabled in the
- * configuration. With no voices configured the check is skipped and the key goes to
- * the bridge as given.
+ * the bridge, so a client can only select a model that is listed, enabled and
+ * available in the configuration. Voices that are coming soon or retired are still
+ * listed, so the client can announce them, but no speech is made with them. With no
+ * voices configured the check is skipped and the key goes to the bridge as given.
  */
 @Component
 @EnableConfigurationProperties(TtsVoiceProperties.class)
@@ -48,13 +49,13 @@ public class VoiceCatalog {
         String requestedDefault = properties.defaultModel();
         if (requestedDefault == null || requestedDefault.isBlank()) {
             this.defaultKey = null;
-        } else if (voices.isEmpty() || find(requestedDefault).isPresent()) {
+        } else if (voices.isEmpty() || find(requestedDefault).filter(Voice::selectable).isPresent()) {
             this.defaultKey = requestedDefault;
         } else {
             // A default that cannot be selected would fail every request that names no
             // voice, so it is refused at startup rather than on the first question.
             throw new IllegalStateException("tts.default-model '" + requestedDefault
-                    + "' is not an enabled voice under tts.voices.");
+                    + "' is not an enabled, available voice under tts.voices.");
         }
 
         LOGGER.info("Voices on offer: {} (default {})",
@@ -62,7 +63,7 @@ public class VoiceCatalog {
                 defaultKey == null ? "chosen by the bridge" : defaultKey);
     }
 
-    /** Enabled voices in display order. */
+    /** Enabled voices in display order, including those coming soon or retired. */
     public List<Voice> voices() {
         return voices;
     }
@@ -84,17 +85,27 @@ public class VoiceCatalog {
         if (voices.isEmpty()) {
             return requested;
         }
-        return find(requested)
-                .map(Voice::key)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Unknown voice '" + requested + "'. Available voices: " + keys() + "."));
+        Voice voice = find(requested).orElseThrow(() -> new IllegalArgumentException(
+                "Unknown voice '" + requested + "'. Available voices: " + keys() + "."));
+        return switch (voice.status()) {
+            case AVAILABLE -> voice.key();
+            case COMING_SOON -> throw new IllegalArgumentException(
+                    displayName(voice) + " is coming soon and cannot be used yet. Available voices: " + keys() + ".");
+            case RETIRED -> throw new IllegalArgumentException(
+                    displayName(voice) + " is no longer supported. Available voices: " + keys() + ".");
+        };
     }
 
     private Optional<Voice> find(String key) {
         return voices.stream().filter(voice -> voice.key().equals(key)).findFirst();
     }
 
+    /** Keys that can actually be used, for log lines and error messages. */
     private String keys() {
-        return voices.stream().map(Voice::key).collect(Collectors.joining(", "));
+        return voices.stream().filter(Voice::selectable).map(Voice::key).collect(Collectors.joining(", "));
+    }
+
+    private static String displayName(Voice voice) {
+        return voice.name() == null || voice.name().isBlank() ? "The voice '" + voice.key() + "'" : voice.name();
     }
 }

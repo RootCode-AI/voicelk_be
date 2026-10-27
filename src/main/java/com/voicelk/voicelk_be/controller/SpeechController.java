@@ -101,6 +101,8 @@ public class SpeechController {
                         voice.key(),
                         voice.name() == null || voice.name().isBlank() ? voice.key() : voice.name(),
                         voice.description(),
+                        voice.tag() == null || voice.tag().isBlank() ? null : voice.tag(),
+                        voice.status(),
                         voice.key().equals(defaultKey)))
                 .toList();
         return ResponseEntity.ok(voices);
